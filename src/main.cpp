@@ -9,8 +9,8 @@ int main(){
   std::cout << "Starting program: " << PROGRAM_NAME << std::endl;
   
   Metaball mb();
-  Vector v(2.4, 0.0);
-  Vector a(1.2, 4.5);
+  Vector v(2.4, 0.0, 0.0);
+  Vector a(1.2, 4.5, 1.1);
   a = a + v;
   std::cout << a.X << std::endl;
   
