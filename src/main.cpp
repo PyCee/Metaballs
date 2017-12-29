@@ -1,18 +1,22 @@
 #include <iostream>
 #include "metaball.hpp"
-#include "vector.hpp"
+#include "window.hpp"
+#include "vulkan_instance.hpp"
 
 using namespace MTB;
 
 const char *PROGRAM_NAME = "Metaballs";
+const char METABALL_COUNT = 4;
+
 int main(){
   std::cout << "Starting program: " << PROGRAM_NAME << std::endl;
-  
-  Metaball mb();
-  Vector v(2.4, 0.0, 0.0);
-  Vector a(1.2, 4.5, 1.1);
-  a = a + v;
-  std::cout << a.X << std::endl;
-  
+  Metaball metaballs[METABALL_COUNT];
+  Window window = Window("title", 600, 400);
+  Vulkan_Instance vk_instance;
+
+  while(!window.is_closed()){
+    // Update metaballs
+    // Draw metaballs
+  }
   std::cout << "Ending program: " << PROGRAM_NAME << std::endl;
 }
