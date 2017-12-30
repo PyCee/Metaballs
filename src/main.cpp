@@ -12,7 +12,10 @@ int main(){
   std::cout << "Starting program: " << PROGRAM_NAME << std::endl;
   Metaball metaballs[METABALL_COUNT];
   Window window = Window("title", 600, 400);
-  Vulkan_Instance vk_instance;
+  std::vector<std::string> vk_extensions,
+    vk_layers;
+  Vulkan_Instance vk_instance = Vulkan_Instance(vk_extensions, vk_layers);
+  GPU_Manager gpu_manager(vk_instance.get_instance());
 
   while(!window.is_closed()){
     // Update metaballs

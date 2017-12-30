@@ -20,7 +20,7 @@ CFLAGS=-g -Wall \
 	-Wunreachable-code \
 	-I$(INCLUDE_DIR) \
 	-I$(VULKAN_SDK_INCLUDE_PATH)
-LDFLAGS = -L$(VULKAN_SDK_PATH)/lib -lvulkan -lxcb
+LDFLAGS = -L$(VULKAN_SDK_PATH)/lib -lvulkan -lxcb -ldl
 
 OBJECT_FILES=$(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
@@ -33,6 +33,8 @@ $(TARGET): $(OBJECT_FILES)
 $(BUILD_DIR)/%.o:$(SRC_DIR)/%.cpp
 	@echo "Compiling file: $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
+debug: CFLAGS += -D MTB_DEBUG
+debug: all
 clean:
 	@find . -type f \( -name '*~' \) -delete
 	@cd $(BUILD_DIR)/; rm -fr *
