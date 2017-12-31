@@ -3,29 +3,29 @@
 
 using namespace MTB;
 
-GPU_Manager::GPU_Manager(VkInstance instance){
+GPU_Manager::GPU_Manager(Vulkan_Instance &instance){
   unsigned int gpu_count;
-  if(vkEnumeratePhysicalDevices(instance, &gpu_count, NULL) !=
+  if(vkEnumeratePhysicalDevices(instance.get_instance(), &gpu_count, NULL) !=
      VK_SUCCESS || 0 == gpu_count){
     std::cout << "ERROR::Failed enumerating physical device count" << std::endl;
   }
-  VkPhysicalDevice physical_devices[gpu_count];
-  if(vkEnumeratePhysicalDevices(instance, &gpu_count, physical_devices) !=
-     VK_SUCCESS){
+  this->m_physical_devices = new VkPhysicalDevice[gpu_count];
+  if(vkEnumeratePhysicalDevices(instance.get_instance(), &gpu_count,
+				this->m_physical_devices) != VK_SUCCESS){
     std::cout << "ERROR::Failed enumerating physical devices" << std::endl;
   } else {
     std::cout << "Enumerated physical devices: " << gpu_count << std::endl;
     VkPhysicalDeviceProperties device_properties;
-    vkGetPhysicalDeviceProperties(physical_devices[0], &device_properties);
+    vkGetPhysicalDeviceProperties(this->m_physical_devices[0], &device_properties);
     std::cout << "Using physical device: " << device_properties.deviceName << std::endl;
   }
     
   unsigned int queue_family_count;
-  vkGetPhysicalDeviceQueueFamilyProperties(physical_devices[0],
+  vkGetPhysicalDeviceQueueFamilyProperties(this->m_physical_devices[0],
 					   &queue_family_count, NULL);
   
   VkQueueFamilyProperties queue_family_properties[queue_family_count];
-  vkGetPhysicalDeviceQueueFamilyProperties(physical_devices[0],
+  vkGetPhysicalDeviceQueueFamilyProperties(this->m_physical_devices[0],
 					   &queue_family_count, 
 					   queue_family_properties);
   unsigned int queue_family_index;
@@ -38,6 +38,7 @@ GPU_Manager::GPU_Manager(VkInstance instance){
   if(queue_family_index == queue_family_count){
     std::cout << "ERROR::failed to find queue family with any queues" << std::endl;
   }
+  this->m_queue_family_index = queue_family_index;
   
   // Create 1 queue family
   float queue_priorities[1] = {1.0};
@@ -70,7 +71,7 @@ GPU_Manager::GPU_Manager(VkInstance instance){
     .pEnabledFeatures = NULL
   };
   this->m_logical_device = VK_NULL_HANDLE;
-  if(vkCreateDevice(physical_devices[0], &device_create_info, NULL,
+  if(vkCreateDevice(this->m_physical_devices[0], &device_create_info, NULL,
 		    &this->m_logical_device) != VK_SUCCESS){
     std::cout << "ERRROR::Failed to create logical device" << std::endl;
   } else{
@@ -90,6 +91,7 @@ GPU_Manager::GPU_Manager(VkInstance instance){
   } else{
     std::cout << "Created command pool" << std::endl;
   }
+  
   // Get a single device queue from index 0
   vkGetDeviceQueue(this->m_logical_device, queue_family_index, 0,
 		   &this->m_queue);

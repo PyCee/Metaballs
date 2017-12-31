@@ -25,18 +25,29 @@ PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback = VK_NULL_HANDLE;
 PFN_vkDebugReportMessageEXT DebugReportMessage = VK_NULL_HANDLE;
 PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback = VK_NULL_HANDLE;
 // if windows
-/*
+#if defined(_WIN32)
 static HWMODULE vulkan_library;
+#define LOAD_VULKAN() (vulkan_library = LoadLibrary("vulkan-1.dll"))
+#define FREE_LIBRARY(library) FreeLibrary(library)
 #define LOAD_LIBRARY_FUNCTION(library, fun_string) GetProcAddress(library, fun_string)
- */
-// if linux
+#elif defined(__unix__)
 static void *vulkan_library;
+#define LOAD_VULKAN() (vulkan_library = dlopen("libvulkan.so.1", RTLD_NOW))
+#define FREE_LIBRARY(library) dlclose(library)
 #define LOAD_LIBRARY_FUNCTION(library, fun_string) dlsym(library, fun_string)
+#endif /* __unix__ */
 #endif /* MTB_DEBUG */
 
-Vulkan_Instance::Vulkan_Instance(std::vector<std::string> extensions,
-				 std::vector<std::string> layers){
+Vulkan_Instance::Vulkan_Instance(){
   unsigned int i;
+  std::vector<std::string> extensions,
+    layers;
+  extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#if defined(_WIN32)
+  extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#elif defined(__unix__)
+  extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+#endif
   
 #if defined(MTB_DEBUG)
   // If the program is compiled with 'make debug'
@@ -83,17 +94,12 @@ Vulkan_Instance::Vulkan_Instance(std::vector<std::string> extensions,
   }
   
 #if defined(MTB_DEBUG)
-  //#if defined(windows)
-  // vulkan_library = LoadLibrary("vulkan-1.dll");
-  //#elif defined(linux)
-  vulkan_library = dlopen("libvulkan.so.1", RTLD_NOW);
-  //#endif /* linux */
+  LOAD_VULKAN();
   if(NULL == vulkan_library){
     std::cout << "ERROR::Failed to load vulkan library (for debugging)" << std::endl;
   }
   GetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)
     LOAD_LIBRARY_FUNCTION(vulkan_library, "vkGetInstanceProcAddr");
-  
   CreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)
     GetInstanceProcAddr(this->m_instance, "vkCreateDebugReportCallbackEXT");
   DebugReportMessage = (PFN_vkDebugReportMessageEXT)
@@ -124,11 +130,7 @@ Vulkan_Instance::~Vulkan_Instance(){
   DestroyDebugReportCallback(this->m_instance, debug_report_callback,
 			     VK_NULL_HANDLE);
   debug_report_callback = VK_NULL_HANDLE;
-
-  // if windows
-  // FreeLibrary(vulkan_library);
-  // if linux
-  dlclose(vulkan_library);
+  FREE_LIBRARY(vulkan_library);
 #endif
   vkDestroyInstance(this->m_instance, NULL);
 }

@@ -3,16 +3,21 @@
 
 #include <vector>
 #include <string>
+
+#if defined(_WIN32)
+#define VK_USE_PLATFORM_WIN32_KHR
+#elif defined(__unix__)
+#define VK_USE_PLATFORM_XCB_KHR
+#endif
+
 #include <vulkan/vulkan.h>
-#include "gpu_manager.hpp"
 
 namespace MTB{
   class Vulkan_Instance{
   private:
     VkInstance m_instance;
   public:
-    Vulkan_Instance(){};
-    Vulkan_Instance(std::vector<std::string>, std::vector<std::string>);
+    Vulkan_Instance();
     ~Vulkan_Instance();
     VkInstance get_instance(){return this->m_instance;};
   };
