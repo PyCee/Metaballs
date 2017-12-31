@@ -3,7 +3,8 @@
 
 using namespace MTB;
 Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
-		 GPU_Manager *gpu_manager): p_vulkan_instance(vulkan_instance){
+		 GPU_Manager *gpu_manager):
+  p_vulkan_instance(vulkan_instance), p_gpu_manager(gpu_manager){
 #if defined(_WIN32)
   VkWin32SurfaceCreateInfoKHR surface_create_info;
   surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
@@ -33,8 +34,6 @@ Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
     std::cout << "Created xcb surface" << std::endl;
   }
 #endif /* __unix__ */
-  
-  // vkGetPhysicalDeviceSurfaceSupportKHR
   unsigned int surface_support;
   vkGetPhysicalDeviceSurfaceSupportKHR(gpu_manager->get_physical_device(),
 				       gpu_manager->get_queue_family_index(),
@@ -42,8 +41,26 @@ Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
   if(surface_support != VK_TRUE){
     std::cout << "ERROR::Physical device does not support surfaces" << std::endl;
   }
+  
+  VkSemaphoreCreateInfo semaphore_create_info = {
+    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+    .pNext = NULL,
+    .flags = 0
+  };
+  if(vkCreateSemaphore(gpu_manager->get_logical_device(), &semaphore_create_info, NULL,
+		       &this->m_image_available) != VK_SUCCESS){
+    std::cout << "ERROR::Failed to create surface->m_image_available" << std::endl;
+  }
+  if(vkCreateSemaphore(gpu_manager->get_logical_device(), &semaphore_create_info, NULL,
+		       &this->m_image_presentable) != VK_SUCCESS){
+    std::cout << "ERROR::Failed to create surface->m_image_presentable" << std::endl;
+  }
 }
 Surface::~Surface(){
+  vkDestroySemaphore(this->p_gpu_manager->get_logical_device(),
+		     this->m_image_available, NULL);
+  vkDestroySemaphore(this->p_gpu_manager->get_logical_device(),
+		     this->m_image_presentable, NULL);
   vkDestroySurfaceKHR(this->p_vulkan_instance->get_instance(),
 		      this->m_surface, NULL);
 }

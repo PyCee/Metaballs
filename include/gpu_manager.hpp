@@ -18,6 +18,7 @@ namespace MTB{
     VkPhysicalDevice get_physical_device(void){return this->m_physical_devices[0];};
     VkDevice get_logical_device(void){return this->m_logical_device;};
     unsigned int get_queue_family_index(void){return this->m_queue_family_index;};
+    VkQueue get_queue(void){return this->m_queue;};
   };
 };
 

@@ -2,24 +2,25 @@
 #include <iostream>
 
 using namespace MTB;
-Swapchain::Swapchain(GPU_Manager *gpu_manager, VkSurfaceKHR surface):
-  p_gpu_manager(gpu_manager){
+Swapchain::Swapchain(GPU_Manager *gpu_manager, Surface *surface):
+  p_surface(surface), p_gpu_manager(gpu_manager), m_image_index(0){
   unsigned int i;
   VkSurfaceCapabilitiesKHR capabilities;
   if(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu_manager->get_physical_device(),
-					       surface, &capabilities) != VK_SUCCESS){
+					       surface->get_surface(),
+					       &capabilities) != VK_SUCCESS){
     std::cout << "ERROR::Failed to get physical device surface capabilities" <<
       std::endl;
   }
   unsigned int format_count;
   if(vkGetPhysicalDeviceSurfaceFormatsKHR(gpu_manager->get_physical_device(),
-					  surface, &format_count,
+					  surface->get_surface(), &format_count,
 					  NULL) != VK_SUCCESS){
     std::cout << "ERROR::Failed to get surface format count" << std::endl;
   }
   VkSurfaceFormatKHR available_formats[format_count];
   if(vkGetPhysicalDeviceSurfaceFormatsKHR(gpu_manager->get_physical_device(),
-					  surface, &format_count,
+					  surface->get_surface(), &format_count,
 					  available_formats) != VK_SUCCESS){
     std::cout << "ERROR::Failed to get surface formats" << std::endl;
   }
@@ -36,12 +37,11 @@ Swapchain::Swapchain(GPU_Manager *gpu_manager, VkSurfaceKHR surface):
       }
     }
   }
-  
   VkSwapchainCreateInfoKHR swapchain_create_info = {
     .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
     .pNext = NULL,
     .flags = 0,
-    .surface = surface,
+    .surface = surface->get_surface(),
     .minImageCount = 3,
     .imageFormat = swapchain_format.format,
     .imageColorSpace = swapchain_format.colorSpace,
@@ -64,9 +64,70 @@ Swapchain::Swapchain(GPU_Manager *gpu_manager, VkSurfaceKHR surface):
   } else{
     std::cout << "Created swapchain" << std::endl;
   }
+
+  unsigned int image_count;
+  if(vkGetSwapchainImagesKHR(gpu_manager->get_logical_device(), this->m_swapchain,
+			     &image_count, NULL) != VK_SUCCESS || image_count == 0){
+    std::cout << "ERROR::Failed to get swapchain image count" << std::endl;
+  }
+  
+  if(vkGetSwapchainImagesKHR(gpu_manager->get_logical_device(), this->m_swapchain,
+			     &image_count, this->m_images.data()) != VK_SUCCESS){
+    std::cout << "ERROR::Failed to get swapchain images" << std::endl;
+  }
 }
 Swapchain::~Swapchain(){
   vkDeviceWaitIdle(this->p_gpu_manager->get_logical_device());
   vkDestroySwapchainKHR(this->p_gpu_manager->get_logical_device(),
 			this->m_swapchain, NULL);
+}
+
+void Swapchain::present_image(void){
+
+  // TODO: copy this->p_surface->render_target to this.get_current_image()
+  // submit that command
+
+  VkSemaphore wait_semaphores[] = {
+    this->p_surface->get_semaphore_image_presentable()
+  };
+  VkPresentInfoKHR present_info = {
+    .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+    .pNext = NULL,
+    .waitSemaphoreCount = sizeof(wait_semaphores) / sizeof(*wait_semaphores),
+    .pWaitSemaphores = wait_semaphores,
+    .swapchainCount = 1,
+    .pSwapchains = &this->m_swapchain,
+    .pImageIndices = &this->m_image_index,
+    .pResults = NULL
+  };
+  switch(vkQueuePresentKHR(this->p_gpu_manager->get_queue(), &present_info)){
+  case VK_SUCCESS:
+    break;
+  case VK_SUBOPTIMAL_KHR:
+  case VK_ERROR_OUT_OF_DATE_KHR:
+    // TODO: rebuild swapchain
+    std::cout << "TODO: Need to rebuild out-of-date swapchain (present)" << std::endl;
+    break;
+  default:
+    std::cout << "ERROR::Failed to present swapchain image" << std::endl;
+    break;
+  }
+}
+void Swapchain::set_next_image(void){
+  static unsigned int const acquire_image_timeout = 4000; // (ns)
+  switch(vkAcquireNextImageKHR(this->p_gpu_manager->get_logical_device(),
+			       this->m_swapchain, acquire_image_timeout,
+			       this->p_surface->get_semaphore_image_available(),
+			       VK_NULL_HANDLE, &this->m_image_index)){
+  case VK_SUCCESS:
+    break;
+  case VK_SUBOPTIMAL_KHR:
+  case VK_ERROR_OUT_OF_DATE_KHR:
+    // TODO: rebuild swapchain
+    std::cout << "TODO: Need to rebuild out-of-date swapchain (acquire)" << std::endl;
+    break;
+  default:
+    std::cout << "ERROR::Failed to acquire next swapchain image" << std::endl;
+    break;
+  }
 }

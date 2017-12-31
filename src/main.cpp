@@ -4,6 +4,7 @@
 #include "vulkan_instance.hpp"
 #include "gpu_manager.hpp"
 #include "surface.hpp"
+#include "swapchain.hpp"
 
 using namespace MTB;
 
@@ -17,7 +18,7 @@ int main(){
   Vulkan_Instance vk_instance = Vulkan_Instance();
   GPU_Manager gpu_manager(vk_instance);
   Surface surface(window, &vk_instance, &gpu_manager);
-  Swapchain swapchain(&gpu_manager, surface.get_surface());
+  Swapchain swapchain(&gpu_manager, &surface);
 
   while(!window.is_closed()){
     // Update metaballs
