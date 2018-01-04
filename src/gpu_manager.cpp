@@ -19,6 +19,9 @@ GPU_Manager::GPU_Manager(Vulkan_Instance &instance){
     vkGetPhysicalDeviceProperties(this->m_physical_devices[0], &device_properties);
     std::cout << "Using physical device: " << device_properties.deviceName << std::endl;
   }
+  
+  vkGetPhysicalDeviceMemoryProperties(this->get_physical_device(),
+				      &this->m_memory_properties);
     
   unsigned int queue_family_count;
   vkGetPhysicalDeviceQueueFamilyProperties(this->m_physical_devices[0],
@@ -106,4 +109,45 @@ GPU_Manager::~GPU_Manager(){
   // Free logical device
   vkDeviceWaitIdle(this->m_logical_device);
   vkDestroyDevice(this->m_logical_device, NULL);
+}
+void GPU_Manager::allocate_command_buffer(VkCommandBuffer *command_buffer,
+					  unsigned int buffer_count=1){
+  static VkCommandBufferAllocateInfo command_buffer_allocate_info = {
+    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+    .pNext = NULL,
+    .commandPool = this->m_command_pool,
+    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+    .commandBufferCount = buffer_count
+  };
+  if(vkAllocateCommandBuffers(this->get_logical_device(), &command_buffer_allocate_info,
+			      command_buffer) != VK_SUCCESS){
+    std::cout << "ERROR::Failed to allocate command buffer" << std::endl;
+  }
+}
+void GPU_Manager::submit(void){
+  if(this->command_buffers.size() > 0){
+    VkSubmitInfo submission_info = {
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .pNext = NULL,
+      .waitSemaphoreCount = (unsigned int) this->wait_sem.size(),
+      .pWaitSemaphores = this->wait_sem.data(),
+      .pWaitDstStageMask = this->wait_dst_mask.data(),
+      .commandBufferCount = (unsigned int) this->command_buffers.size(),
+      .pCommandBuffers = this->command_buffers.data(),
+      .signalSemaphoreCount = (unsigned int) this->sig_sem.size(),
+      .pSignalSemaphores = this->sig_sem.data()
+    };
+    vkQueueWaitIdle(this->get_queue());
+    if(vkQueueSubmit(this->get_queue(), 1, &submission_info,
+		     NULL) != VK_SUCCESS){
+		     //p_submission_queue->queue_finished) != VK_SUCCESS){
+      std::cout << "ERROR::Failed to submit command queues" << std::endl;
+    }
+    this->wait_sem.clear();
+    this->sig_sem.clear();
+    this->wait_dst_mask.clear();
+    this->command_buffers.clear();
+  } else{
+    std::cout << "ERROR::Command submission: <= 1 command" << std::endl;
+  }
 }
