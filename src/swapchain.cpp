@@ -63,7 +63,6 @@ Swapchain::Swapchain(GPU_Manager *gpu_manager, Surface *surface):
     // Search for our desired present mode
     if(VK_PRESENT_MODE_MAILBOX_KHR == available_present_modes[i]){
       present_mode_index = i;
-      std::cout << "mailbox mode" << std::endl;
       break;
     }
   }
@@ -146,9 +145,6 @@ Swapchain::~Swapchain(){
 }
 
 void Swapchain::present_image(void){
-
-  // submit that command
-
   VkSemaphore wait_semaphores[] = {
     this->get_semaphore_ready_to_present()
   };
