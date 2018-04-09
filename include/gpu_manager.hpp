@@ -19,7 +19,7 @@ namespace MTB{
     GPU_Manager(){};
     GPU_Manager(Vulkan_Instance &);
     ~GPU_Manager();
-    void allocate_command_buffer(VkCommandBuffer *, unsigned int);
+    void allocate_command_buffers(VkCommandBuffer *, unsigned int);
     void submit(void);
     
     VkPhysicalDevice get_physical_device(void){return this->m_physical_devices[0];};
@@ -28,7 +28,8 @@ namespace MTB{
     VkQueue get_queue(void){return this->m_queue;};
     VkPhysicalDeviceMemoryProperties get_memory_properties(void){
       return this->m_memory_properties;};
-    void add_wait_semaphore(VkSemaphore wait, VkPipelineStageFlags flags){
+    void add_wait_semaphore(VkSemaphore wait,
+			    VkPipelineStageFlags flags=VK_PIPELINE_STAGE_TRANSFER_BIT){
       this->wait_sem.push_back(wait);
       this->wait_dst_mask.push_back(flags);
     };

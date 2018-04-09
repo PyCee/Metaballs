@@ -53,8 +53,6 @@ Window::~Window(){
   xcb_disconnect(this->m_connection);
 }
 bool Window::is_closed(){
-
-  
   xcb_generic_event_t *event;
   while((event = xcb_poll_for_event(this->m_connection))){
     switch(event->response_type & ~0x80){

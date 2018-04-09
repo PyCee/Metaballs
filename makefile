@@ -6,7 +6,7 @@ SRC_DIR=src
 BUILD_DIR=build
 BIN_DIR=bin
 INCLUDE_DIR=include
-VULKAN_SDK_PATH = /home/kims/VulkanSDK/1.0.65.0/x86_64
+VULKAN_SDK_PATH = /home/kims/VulkanSDK/VulkanSDK/1.1.70.1/x86_64
 VULKAN_SDK_INCLUDE_PATH = $(VULKAN_SDK_PATH)/include
 
 CC=g++

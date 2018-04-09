@@ -100,7 +100,7 @@ GPU_Manager::GPU_Manager(Vulkan_Instance &instance){
 		   &this->m_queue);
 }
 GPU_Manager::~GPU_Manager(){
-  // Free queue
+  // Wait for queue to finish
   vkQueueWaitIdle(this->m_queue);
   // Free Command Pool
   vkResetCommandPool(this->m_logical_device, this->m_command_pool,
@@ -110,9 +110,9 @@ GPU_Manager::~GPU_Manager(){
   vkDeviceWaitIdle(this->m_logical_device);
   vkDestroyDevice(this->m_logical_device, NULL);
 }
-void GPU_Manager::allocate_command_buffer(VkCommandBuffer *command_buffer,
-					  unsigned int buffer_count=1){
-  static VkCommandBufferAllocateInfo command_buffer_allocate_info = {
+void GPU_Manager::allocate_command_buffers(VkCommandBuffer *p_command_buffer,
+					   unsigned int buffer_count=1){
+  VkCommandBufferAllocateInfo command_buffer_allocate_info = {
     .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
     .pNext = NULL,
     .commandPool = this->m_command_pool,
@@ -120,7 +120,7 @@ void GPU_Manager::allocate_command_buffer(VkCommandBuffer *command_buffer,
     .commandBufferCount = buffer_count
   };
   if(vkAllocateCommandBuffers(this->get_logical_device(), &command_buffer_allocate_info,
-			      command_buffer) != VK_SUCCESS){
+			      p_command_buffer) != VK_SUCCESS){
     std::cout << "ERROR::Failed to allocate command buffer" << std::endl;
   }
 }

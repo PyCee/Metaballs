@@ -2,7 +2,6 @@
 #include <iostream>
 #include <dlfcn.h>
 
-
 using namespace MTB;
 
 #if defined(MTB_DEBUG)
@@ -24,7 +23,6 @@ PFN_vkGetInstanceProcAddr GetInstanceProcAddr = VK_NULL_HANDLE;
 PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback = VK_NULL_HANDLE;
 PFN_vkDebugReportMessageEXT DebugReportMessage = VK_NULL_HANDLE;
 PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback = VK_NULL_HANDLE;
-// if windows
 #if defined(_WIN32)
 static HWMODULE vulkan_library;
 #define LOAD_VULKAN() (vulkan_library = LoadLibrary("vulkan-1.dll"))
@@ -38,8 +36,10 @@ static void *vulkan_library;
 #endif /* __unix__ */
 #endif /* MTB_DEBUG */
 
+
 Vulkan_Instance::Vulkan_Instance(){
-  unsigned int i;
+  unsigned int i,
+    j;
   std::vector<std::string> extensions,
     layers;
   extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
@@ -69,10 +69,38 @@ Vulkan_Instance::Vulkan_Instance(){
   char const *char_extensions[extensions.size()];
   char const *char_layers[layers.size()];
   
+  unsigned int extension_count;
+  vkEnumerateInstanceExtensionProperties(NULL, &extension_count, NULL);
+  std::vector<VkExtensionProperties> available_extensions(extension_count);
+  vkEnumerateInstanceExtensionProperties(NULL, &extension_count,
+					 available_extensions.data());
   for(i = 0; i < extensions.size(); ++i){
+    bool extension_exists = false;
+    for(j = 0; j < available_extensions.size(); ++j){
+      if(extensions[i] == available_extensions[j].extensionName){
+	extension_exists = true;
+      }
+    }
+    if(!extension_exists){
+      std::cout << "Extension \'" << extensions[i] << "\' does not exist" << std::endl;
+    }
     char_extensions[i] = extensions.data()[i].c_str();
   }
+  
+  unsigned int layer_count;
+  vkEnumerateInstanceLayerProperties(&layer_count, NULL);
+  std::vector<VkLayerProperties> available_layers(layer_count);
+  vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
   for(i = 0; i < layers.size(); ++i){
+    bool layer_exists = false;
+    for(j = 0; j < available_layers.size(); ++j){
+      if(layers[i] == available_layers[j].layerName){
+	layer_exists = true;
+      }
+    }
+    if(!layer_exists){
+      std::cout << "Layer \'" << layers[i] << "\' does not exist" << std::endl;
+    }
     char_layers[i] =  layers.data()[i].c_str();
   }
   VkInstanceCreateInfo instance_create_info = {

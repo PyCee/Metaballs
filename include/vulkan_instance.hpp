@@ -15,8 +15,9 @@
 namespace MTB{
   class Vulkan_Instance{
   private:
-    VkInstance m_instance;
+    //VkInstance m_instance;
   public:
+    VkInstance m_instance;
     Vulkan_Instance();
     ~Vulkan_Instance();
     VkInstance get_instance(){return this->m_instance;};

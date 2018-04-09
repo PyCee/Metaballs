@@ -7,12 +7,13 @@ Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
 		 GPU_Manager *gpu_manager):
   p_vulkan_instance(vulkan_instance), p_gpu_manager(gpu_manager){
 #if defined(_WIN32)
-  VkWin32SurfaceCreateInfoKHR surface_create_info;
-  surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-  surface_create_info.pNext = NULL;
-  surface_create_info.flags = 0;
-  //surface_create_info.hinstance = Window.Instance;//TODO support windows
-  //surface_create_info.hwind = Window.Handle;
+  VkWin32SurfaceCreateInfoKHR surface_create_info = {
+    .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+    .pNext = NULL,
+    .flags = 0,
+    //.hinstance = Window.Instance,//TODO support windows
+    //.hwind = Window.Handle,
+  };
   if(vkCreateWin32SurfaceKHR(this->p_vulkan_instance->get_instance(),
 			     &surface_create_info, NULL,
 			     &p_presentation_surface.surface) != VK_SUCCESS){
@@ -21,18 +22,19 @@ Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
     std::cout << "Created win32 surface" << std::endl;
   }
 #elif defined(__unix__)
-  VkXcbSurfaceCreateInfoKHR surface_create_info;
-  surface_create_info.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
-  surface_create_info.pNext = NULL;
-  surface_create_info.flags = 0;
-  surface_create_info.connection = window.m_connection;
-  surface_create_info.window = window.m_window;
+  VkXcbSurfaceCreateInfoKHR surface_create_info = {
+    .sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR,
+    .pNext = NULL,
+    .flags = 0,
+    .connection = window.m_connection,
+    .window = window.m_window,
+  };
   if(vkCreateXcbSurfaceKHR(this->p_vulkan_instance->get_instance(),
 			   &surface_create_info, NULL,
 			   &this->m_surface) != VK_SUCCESS){
     std::cout << "ERROR::Failed to create xcb surface" << std::endl;
   } else{
-    std::cout << "Created xcb surface" << std::endl;
+    std::cout << "Created xcb surface: " << this->m_surface << std::endl;
   }
 #endif /* __unix__ */
   unsigned int surface_support;
@@ -44,6 +46,7 @@ Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
   }
 }
 Surface::~Surface(){
+  std::cout << "destroying surface: " << this->m_surface << std::endl;
   vkDestroySurfaceKHR(this->p_vulkan_instance->get_instance(),
 		      this->m_surface, NULL);
 }

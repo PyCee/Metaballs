@@ -9,11 +9,12 @@
 namespace MTB{
   class Surface{
   private:
-    VkSurfaceKHR m_surface;
+    //VkSurfaceKHR m_surface;
     VkCommandBuffer m_command_buffer;
     Vulkan_Instance *p_vulkan_instance;
     GPU_Manager *p_gpu_manager;
   public:
+    VkSurfaceKHR m_surface;
     Surface(){};
     Surface(Window &, Vulkan_Instance *, GPU_Manager *);
     ~Surface();

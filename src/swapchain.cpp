@@ -170,6 +170,7 @@ void Swapchain::present_image(void){
     std::cout << "ERROR::Failed to present swapchain image" << std::endl;
     break;
   }
+  // Set new swapchain image after presentation
   this->set_new_image();
 }
 void Swapchain::set_new_image(void){
