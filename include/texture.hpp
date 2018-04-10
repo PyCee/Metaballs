@@ -18,6 +18,7 @@ namespace MTB{
     Texture(GPU_Manager *, unsigned int, unsigned int, VkFormat,
 	    VkImageUsageFlags, VkMemoryPropertyFlags, VkImageAspectFlags);
     ~Texture();
+    VkFormat get_format(void){return this->m_format;};
     VkImage get_image(void){return this->m_image;};
   };
 };

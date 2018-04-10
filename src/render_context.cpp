@@ -197,7 +197,6 @@ Render_Context::Render_Context(Window &window, Vulkan_Instance *vulkan_instance,
 }
 Render_Context::~Render_Context(){
   delete[] this->m_render_target_copy_buffers;
-  std::cout<<"freeing semaphore target rendered: "<<this->m_target_rendered<<std::endl;
   vkDestroySemaphore(this->p_gpu_manager->get_logical_device(),
 		     this->m_target_rendered, NULL);
 }

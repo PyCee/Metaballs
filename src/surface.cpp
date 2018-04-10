@@ -46,7 +46,6 @@ Surface::Surface(Window &window, Vulkan_Instance *vulkan_instance,
   }
 }
 Surface::~Surface(){
-  std::cout << "destroying surface: " << this->m_surface << std::endl;
   vkDestroySurfaceKHR(this->p_vulkan_instance->get_instance(),
 		      this->m_surface, NULL);
 }

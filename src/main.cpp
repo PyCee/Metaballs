@@ -5,7 +5,10 @@
 #include "gpu_manager.hpp"
 #include "surface.hpp"
 #include "swapchain.hpp"
+#include "shader_module.hpp"
 #include "render_context.hpp"
+#include "image_view.hpp"
+#include "pipeline.hpp"
 
 using namespace MTB;
 
@@ -19,10 +22,11 @@ int main(){
   Vulkan_Instance vk_instance = Vulkan_Instance();
   GPU_Manager gpu_manager(vk_instance);
   Render_Context rc(window, &vk_instance, &gpu_manager);
+  Pipeline pipe(&gpu_manager, rc);
+  
   
   std::cout << "Pre loop" << std::endl;
-
-  
+  /*
   while(!window.is_closed()){
 
     gpu_manager.add_wait_semaphore(rc.get_semaphore_acquired_image());
@@ -33,7 +37,7 @@ int main(){
 
     rc.present();
   }
-  
+  */  
   std::cout << "Post loop" << std::endl;
   
   vkDeviceWaitIdle(gpu_manager.get_logical_device());

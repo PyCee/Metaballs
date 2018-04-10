@@ -34,6 +34,8 @@ namespace MTB{
     unsigned int get_image_index(void){return this->m_image_index;};
     VkSemaphore get_semaphore_acquired_image(){return this->m_acquired_image;};
     VkSemaphore get_semaphore_ready_to_present(){return this->m_ready_to_present;};
+    unsigned int get_width(void){return this->m_extent.width;};
+    unsigned int get_height(void){return this->m_extent.height;};
   };
 };
 

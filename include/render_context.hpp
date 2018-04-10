@@ -28,8 +28,14 @@ namespace MTB{
     VkSemaphore get_semaphore_acquired_image(void){
       return this->m_swapchain.get_semaphore_acquired_image();
     }
+    VkSurfaceFormatKHR get_surface_format(void){
+      return this->m_swapchain.get_surface_format();
+    }
+    Texture &get_render_target(void){return this->m_render_target;};
     void present(void);
     void queue_up_target_clear(void);
+    unsigned int get_width(void){return this->m_swapchain.get_width();};
+    unsigned int get_height(void){return this->m_swapchain.get_height();};
   };
 };
 
