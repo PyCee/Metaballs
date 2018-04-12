@@ -151,3 +151,20 @@ void GPU_Manager::submit(void){
     std::cout << "ERROR::Command submission: <= 1 command" << std::endl;
   }
 }
+unsigned int GPU_Manager::get_memory_type_index(VkMemoryRequirements mem_req,
+			       VkMemoryPropertyFlags prop_flags){
+  unsigned int i;
+  for(i = 0; i < this->get_memory_properties().memoryTypeCount; ++i){
+    if((mem_req.memoryTypeBits & (uint32_t)(1 << i)) &&
+       ((this->get_memory_properties().memoryTypes[i].propertyFlags & prop_flags) ==
+	prop_flags)){
+      // If the memory requirements correspond with our current index
+      // And the supported memory types at this index contain prop_flags
+      
+      // Then a viable memory type has been found
+      return i;
+    }
+  }
+  std::cout << "failed to find viable memory type" << std::endl;
+  return (unsigned int)-1;
+}

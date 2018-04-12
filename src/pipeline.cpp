@@ -8,10 +8,9 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   m_vk_render_pass(VK_NULL_HANDLE),
   m_vk_framebuffer(VK_NULL_HANDLE),
   m_image_view(p_gpu_manager, render_context.get_render_target(),
-  VK_IMAGE_ASPECT_COLOR_BIT)
-{
+	       VK_IMAGE_ASPECT_COLOR_BIT){
 
-  // code to create renderpass
+  // Renderpass Creation
   VkAttachmentDescription attachment_descriptions[] = {
     {
       .flags = 0,
@@ -88,7 +87,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     std::cout << "Created Vk Render Pass" << std::endl;
   }
 
-  // Framebuffer creation
+  // Framebuffer Creation
   VkImageView img_view = this->m_image_view.get_view();
   VkFramebufferCreateInfo framebuffer_create_info = {
     .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
@@ -111,7 +110,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   }
   
   
-  // Create Graphics Pipeline
+  // Graphics Pipeline Creation
   Shader_Module vertex_shader(this->m_p_gpu_manager, "shaders/meta.vert.spv",
 			      VK_SHADER_STAGE_VERTEX_BIT),
     frag_shader(this->m_p_gpu_manager, "shaders/meta.frag.spv",
@@ -322,11 +321,10 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   
   if(vkCreateGraphicsPipelines(this->m_p_gpu_manager->get_logical_device(),
 			       VK_NULL_HANDLE, 1, &graphics_pipeline_create_info,
-			       NULL, &this->m_vk_graphics_pipeline) !=
-     VK_SUCCESS){
+			       NULL, &this->m_vk_graphics_pipeline) != VK_SUCCESS){
     std::cout << "failed to create graphics pipeline" << std::endl;
   } else {
-    std::cout << "Createdgraphics pipeline" << std::endl;
+    std::cout << "Created graphics pipeline" << std::endl;
   }
   
   VkDescriptorPoolSize pool_sizes[] = {
@@ -516,9 +514,6 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   
   */
   // end of temp init code
-
-
-  
 }
 Pipeline::~Pipeline(){
   vkDestroyDescriptorSetLayout(this->m_p_gpu_manager->get_logical_device(),

@@ -8,6 +8,7 @@
 #include "shader_module.hpp"
 #include "render_context.hpp"
 #include "image_view.hpp"
+#include "memory_map.hpp"
 #include "pipeline.hpp"
 
 using namespace MTB;
@@ -24,8 +25,14 @@ int main(){
   Render_Context rc(window, &vk_instance, &gpu_manager);
   Pipeline pipe(&gpu_manager, rc);
   
-  
   std::cout << "Pre loop" << std::endl;
+
+  Uniform_Buffer mem(&gpu_manager, 64);
+  int tmp[] = {
+    1, 4, 5, 6, 7, 8, 9, 0, 5, 6, 4, 5, 3, 2, 1, 4
+  };
+  mem.flush(tmp, 60);
+  
   /*
   while(!window.is_closed()){
 

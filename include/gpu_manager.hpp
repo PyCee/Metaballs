@@ -15,6 +15,7 @@ namespace MTB{
       sig_sem;
     std::vector<VkPipelineStageFlags> wait_dst_mask;
     std::vector<VkCommandBuffer> command_buffers;
+    VkPhysicalDeviceMemoryProperties memory_properties;
   public:
     GPU_Manager(){};
     GPU_Manager(Vulkan_Instance &);
@@ -28,6 +29,7 @@ namespace MTB{
     VkQueue get_queue(void){return this->m_queue;};
     VkPhysicalDeviceMemoryProperties get_memory_properties(void){
       return this->m_memory_properties;};
+    unsigned int get_memory_type_index(VkMemoryRequirements, VkMemoryPropertyFlags);
     void add_wait_semaphore(VkSemaphore wait,
 			    VkPipelineStageFlags flags=VK_PIPELINE_STAGE_TRANSFER_BIT){
       this->wait_sem.push_back(wait);
