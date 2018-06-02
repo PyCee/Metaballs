@@ -71,8 +71,8 @@ void Memory_Map::flush(void *p_data, size_t data_size){
 
   if(data_size > this->m_max_size){
     // If the data size is greater than our alotted device memory
-    std::cout << "error::attempting to flush data, when data_size (" << data_size <<
-      ") > this->m_max_size (" << this->m_max_size << ")" << std::endl;
+    std::cout << "error::attempting to flush memory_map, when data_size (" <<
+      data_size << ") > this->m_max_size (" << this->m_max_size << ")" << std::endl;
   }
 
   // Map gpu memory to somewhere we can access
@@ -82,7 +82,6 @@ void Memory_Map::flush(void *p_data, size_t data_size){
   }
 
   // Copy data to mapped area
-  // TODO::find c++ equivelent of memcpy
   std::memcpy(p_map, p_data, data_size);
   
   VkMappedMemoryRange memory_range = {

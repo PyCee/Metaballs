@@ -16,15 +16,17 @@ namespace MTB{
     Memory_Map(GPU_Manager *, size_t, VkBufferUsageFlags, VkMemoryPropertyFlags);
     ~Memory_Map();
     void flush(void *, size_t);
-    VkBuffer get_buffer(void){return this->m_buffer;};
-    VkDeviceMemory get_device_memory(void){return this->m_device_memory;};
+    VkBuffer& get_buffer(void){return this->m_buffer;};
+    VkDeviceMemory& get_device_memory(void){return this->m_device_memory;};
   };
   class Uniform_Buffer : public Memory_Map {
   private:
   public:
+    Uniform_Buffer(){};
     Uniform_Buffer(GPU_Manager *p_gpu_manager, size_t max_size):
       Memory_Map(p_gpu_manager, max_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 		 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT){};
+    ~Uniform_Buffer(){};
   };
 }
 

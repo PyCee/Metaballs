@@ -26,25 +26,18 @@ int main(){
   Pipeline pipe(&gpu_manager, rc);
   
   std::cout << "Pre loop" << std::endl;
-
-  Uniform_Buffer mem(&gpu_manager, 64);
-  int tmp[] = {
-    1, 4, 5, 6, 7, 8, 9, 0, 5, 6, 4, 5, 3, 2, 1, 4
-  };
-  mem.flush(tmp, 60);
   
-  /*
   while(!window.is_closed()){
-
+  
     gpu_manager.add_wait_semaphore(rc.get_semaphore_acquired_image());
     gpu_manager.add_signal_semaphore(rc.m_target_rendered);
-    rc.queue_up_target_clear();
+    gpu_manager.queue_up_command(pipe.get_command_buffer());
     
     gpu_manager.submit();
 
     rc.present();
   }
-  */  
+  
   std::cout << "Post loop" << std::endl;
   
   vkDeviceWaitIdle(gpu_manager.get_logical_device());

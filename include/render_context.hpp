@@ -34,6 +34,7 @@ namespace MTB{
     Texture &get_render_target(void){return this->m_render_target;};
     void present(void);
     void queue_up_target_clear(void);
+    VkExtent2D get_swapchain_extent(void){return this->m_swapchain.get_extent();};
     unsigned int get_width(void){return this->m_swapchain.get_width();};
     unsigned int get_height(void){return this->m_swapchain.get_height();};
   };

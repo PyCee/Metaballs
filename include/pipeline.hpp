@@ -6,6 +6,7 @@
 #include "render_context.hpp"
 #include "image_view.hpp"
 #include "shader_module.hpp"
+#include "memory_map.hpp"
 namespace MTB{
   class Pipeline {
   private:
@@ -18,10 +19,14 @@ namespace MTB{
     VkPipeline m_vk_graphics_pipeline;
     VkDescriptorPool m_descriptor_pool;
     VkDescriptorSet m_descriptor_set;
+    Uniform_Buffer m_point_buffer;
+    VkCommandBuffer m_command_buffer;
+    Memory_Map m_screen_plane, m_plane_indices;
   public:
     Pipeline(){};
     Pipeline(GPU_Manager *, Render_Context &);
     ~Pipeline();
+    VkCommandBuffer get_command_buffer(void){return this->m_command_buffer;};
   };
 }
 

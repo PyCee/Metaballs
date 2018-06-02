@@ -1,15 +1,34 @@
 #include "pipeline.hpp"
 #include <iostream>
+#include <glm/glm.hpp>
 
 using namespace MTB;
+
+float screen_plane[] = {
+  -1.0f, -1.0f,
+  -1.0f, 1.0f,
+  1.0f, -1.0f,
+  1.0f, 1.0f
+};
+short plane_indices[] = {
+  0, 1, 2,
+  3, 2, 1
+};
 
 Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   m_p_gpu_manager(p_gpu_manager),
   m_vk_render_pass(VK_NULL_HANDLE),
   m_vk_framebuffer(VK_NULL_HANDLE),
   m_image_view(p_gpu_manager, render_context.get_render_target(),
-	       VK_IMAGE_ASPECT_COLOR_BIT){
-
+	       VK_IMAGE_ASPECT_COLOR_BIT),
+  m_point_buffer(p_gpu_manager, sizeof(glm::vec2)),
+  m_screen_plane(p_gpu_manager, sizeof(screen_plane),
+		 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),
+  m_plane_indices(p_gpu_manager, sizeof(plane_indices),
+		  VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT){
+  
   // Renderpass Creation
   VkAttachmentDescription attachment_descriptions[] = {
     {
@@ -137,16 +156,6 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     }
   };
   
-  float rect_data[][2] = {
-    {-1.0, -1.0},
-    {1.0, -1.0},
-    {-1.0, 1.0},
-    {1.0, 1.0}
-  };
-  unsigned int indices[] = {
-    0, 1, 2, 3, 2, 1
-  };
-  
   VkVertexInputBindingDescription vertex_binding_description = {
     .binding = 0,
     .stride = (unsigned int)sizeof(float) * 2,
@@ -214,7 +223,8 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .depthClampEnable = VK_FALSE,
     .rasterizerDiscardEnable = VK_FALSE,
     .polygonMode = VK_POLYGON_MODE_FILL,
-    .cullMode = VK_CULL_MODE_BACK_BIT,
+    //.cullMode = VK_CULL_MODE_BACK_BIT,
+    .cullMode = VK_CULL_MODE_NONE,
     .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
     .depthBiasEnable = VK_FALSE,
     .depthBiasConstantFactor = 0.0f,
@@ -326,6 +336,8 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   } else {
     std::cout << "Created graphics pipeline" << std::endl;
   }
+
+  // Descriptor Pool Creation
   
   VkDescriptorPoolSize pool_sizes[] = {
     {
@@ -350,6 +362,8 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   } else {
     std::cout << "Created descriptor pool" << std::endl;
   }
+
+  // Descriptor Set Creation
   
   VkDescriptorSetAllocateInfo desc_set_alloc_info = {
     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -366,15 +380,10 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   } else {
     std::cout << "Allocated descriptor set" << std::endl;
   }
-  /*
-  NUS_uniform_buffer world_trans_buffer;
-  if(nus_uniform_buffer_build(sizeof(NUS_matrix), &world_trans_buffer) != NUS_SUCCESS){
-    NUS_LOG_ERROR("failed to create uniform buffer\n");
-    return -1;
-  }
+
   
   VkDescriptorBufferInfo descriptor_buffer_info = {
-    .buffer = world_trans_buffer.buffer,
+    .buffer = this->m_point_buffer.get_buffer(),
     .offset = 0,
     .range = VK_WHOLE_SIZE
   };
@@ -382,7 +391,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   VkWriteDescriptorSet write_desc_set = {
     .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
     .pNext = NULL,
-    .dstSet = descriptor_set,
+    .dstSet = this->m_descriptor_set,
     .dstBinding = 0,
     .dstArrayElement = 0,
     .descriptorCount = 1,
@@ -392,11 +401,8 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .pTexelBufferView = NULL
   };
   
-  vkUpdateDescriptorSets(nus_get_bound_device(), 1, &write_desc_set, 0, NULL);
-  
-  */
-  /*
-  VkCommandBuffer command_buffer;
+  vkUpdateDescriptorSets(p_gpu_manager->get_logical_device(), 1, &write_desc_set, 0,
+			 NULL);
   
   VkCommandBufferBeginInfo command_buffer_begin_info = {
     VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -411,24 +417,23 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     0,
     1
   };
-  VkClearValue clear_value = { .color = {{0.4f, 0.1f, 0.3f, 1.0f}} };
+  VkClearValue clear_value = { .color = {{0.0f, 0.0f, 0.0f, 1.0f}} };
 
   VkRenderPassBeginInfo render_pass_begin_info = {
     .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
     .pNext = NULL,
-    .renderPass = nus_render_pass_get_raw(render_pass),
-    .framebuffer = framebuffer.vk_framebuffer,
+    .renderPass = this->m_vk_render_pass,
+    .framebuffer = this->m_vk_framebuffer,
     .renderArea = {
       .offset = {
 	.x = 0,
 	.y = 0
       },
-      .extent = present.swapchain.extent
+      .extent = render_context.get_swapchain_extent()
     },
     .clearValueCount = 1,
     .pClearValues = &clear_value
   };
-  //
   
   VkImageMemoryBarrier barrier_from_undefined_to_present = {
     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -437,9 +442,9 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
     .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
     .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-    .srcQueueFamilyIndex = nus_get_bound_queue_family_index(),
-    .dstQueueFamilyIndex = nus_get_bound_queue_family_index(),
-    .image = present.render_target.image,
+    .srcQueueFamilyIndex = p_gpu_manager->get_queue_family_index(),
+    .dstQueueFamilyIndex = p_gpu_manager->get_queue_family_index(),
+    .image = render_context.get_render_target().get_image(),
     .subresourceRange = image_subresource_range
   };
   VkImageMemoryBarrier barrier_from_present_to_draw = {
@@ -449,9 +454,9 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
     .oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
     .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-    .srcQueueFamilyIndex = nus_get_bound_queue_family_index(),
-    .dstQueueFamilyIndex = nus_get_bound_queue_family_index(),
-    .image = present.render_target.image,
+    .srcQueueFamilyIndex = p_gpu_manager->get_queue_family_index(),
+    .dstQueueFamilyIndex = p_gpu_manager->get_queue_family_index(),
+    .image = render_context.get_render_target().get_image(),
     .subresourceRange = image_subresource_range
   };
   VkImageMemoryBarrier barrier_from_draw_to_present = {
@@ -461,59 +466,62 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
     .oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
     .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-    .srcQueueFamilyIndex = nus_get_bound_queue_family_index(),
-    .dstQueueFamilyIndex = nus_get_bound_queue_family_index(),
-    .image = present.render_target.image,
+    .srcQueueFamilyIndex = p_gpu_manager->get_queue_family_index(),
+    .dstQueueFamilyIndex = p_gpu_manager->get_queue_family_index(),
+    .image = render_context.get_render_target().get_image(),
     .subresourceRange = image_subresource_range
   };
-  nus_graphics_pipeline_set_viewport(viewport, &graphics_pipeline);
-  nus_graphics_pipeline_set_scissor(scissor, &graphics_pipeline);
 
+  p_gpu_manager->allocate_command_buffers(&this->m_command_buffer, 1);
+
+  VkDeviceSize vertex_memory_offset = 0,
+    index_memory_offset = 0;
+
+  this->m_screen_plane.flush(screen_plane, sizeof(screen_plane));
+  this->m_plane_indices.flush(plane_indices, sizeof(plane_indices));
   
-  nus_allocate_command_buffer(&command_buffer, 1);
-  vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info);
-  vkCmdPipelineBarrier(command_buffer,
+  // Record Command Buffer
+
+  vkBeginCommandBuffer(this->m_command_buffer, &command_buffer_begin_info);
+  vkCmdPipelineBarrier(this->m_command_buffer,
 		       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		       0, 0, NULL, 0, NULL, 1, &barrier_from_undefined_to_present);
-  vkCmdPipelineBarrier(command_buffer,
+  vkCmdPipelineBarrier(this->m_command_buffer,
 		       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		       0, 0, NULL, 0, NULL, 1, &barrier_from_present_to_draw);
   
-  vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info,
+  vkCmdBeginRenderPass(this->m_command_buffer, &render_pass_begin_info,
 		       VK_SUBPASS_CONTENTS_INLINE);
   
-  nus_cmd_graphics_pipeline_bind(command_buffer, graphics_pipeline);
+  vkCmdBindPipeline(this->m_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+		    this->m_vk_graphics_pipeline);  
   
-  vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-			  nus_pipeline_layout_get_raw(pipeline_layout),
-			  0, 1, &descriptor_set, 0, NULL);
+  vkCmdBindDescriptorSets(this->m_command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			  this->m_vk_pipeline_layout,
+			  0, 1, &this->m_descriptor_set, 0, NULL);
   
-  VkDeviceSize vertex_memory_offset = 0,
-    index_memory_offset = 0;
-  vkCmdBindVertexBuffers(command_buffer, 0, 1, &model.vertex_memory.buffer,
-			 &vertex_memory_offset);
-  vkCmdBindIndexBuffer(command_buffer, model.index_memory.buffer, index_memory_offset,
-			VK_INDEX_TYPE_UINT32);
+  vkCmdBindVertexBuffers(this->m_command_buffer, 0, 1,
+			 &this->m_screen_plane.get_buffer(), &vertex_memory_offset);
+  vkCmdBindIndexBuffer(this->m_command_buffer, this->m_plane_indices.get_buffer(),
+		       index_memory_offset, VK_INDEX_TYPE_UINT16);
 
-  vkCmdDrawIndexed(command_buffer, model.index_memory.size/sizeof(NUS_indice),
+  vkCmdDrawIndexed(this->m_command_buffer,
+		   sizeof(plane_indices)/sizeof(plane_indices[0]),
 		   1, 0, 0, 0);
     
-  vkCmdEndRenderPass(command_buffer);
+  vkCmdEndRenderPass(this->m_command_buffer);
   
-  vkCmdPipelineBarrier(command_buffer,
+  vkCmdPipelineBarrier(this->m_command_buffer,
 		       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
 		       0, 0, NULL, 0, NULL, 1, &barrier_from_draw_to_present);
   
-  if(vkEndCommandBuffer(command_buffer) != VK_SUCCESS){
-    printf("ERROR::Could not record command buffers!\n");
-    return NUS_FAILURE;
+  if(vkEndCommandBuffer(this->m_command_buffer) != VK_SUCCESS){
+    std::cout << "ERROR::Could not record pipeline command buffer" << std::endl;
   }
   
-  */
-  // end of temp init code
 }
 Pipeline::~Pipeline(){
   vkDestroyDescriptorSetLayout(this->m_p_gpu_manager->get_logical_device(),
