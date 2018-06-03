@@ -1,6 +1,7 @@
 #include "pipeline.hpp"
 #include <iostream>
 #include <glm/glm.hpp>
+#include "metaball.hpp"
 
 using namespace MTB;
 
@@ -21,7 +22,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   m_vk_framebuffer(VK_NULL_HANDLE),
   m_image_view(p_gpu_manager, render_context.get_render_target(),
 	       VK_IMAGE_ASPECT_COLOR_BIT),
-  m_point_buffer(p_gpu_manager, sizeof(glm::vec2)),
+  m_point_buffer(p_gpu_manager, sizeof(Metaball_Data)),
   m_screen_plane(p_gpu_manager, sizeof(screen_plane),
 		 VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),
@@ -65,27 +66,6 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
       .pPreserveAttachments = NULL
     }
   };
-  /*
-  VkSubpassDependency dependencies[] = {
-    {
-      .srcSubpass = VK_SUBPASS_EXTERNAL,
-      .dstSubpass = 0,
-      .srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-      .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      .srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-      .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-    },
-    {
-      .srcSubpass = 0,
-      .dstSubpass = VK_SUBPASS_EXTERNAL,
-      .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-      .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-      .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-      .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-    }
-  };*/
   
   VkRenderPassCreateInfo render_pass_create_info = {
     .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -95,8 +75,8 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .pAttachments = attachment_descriptions,
     .subpassCount = 1,
     .pSubpasses = subpass_descriptions,
-    .dependencyCount = 0,//2,
-    .pDependencies = NULL,//dependencies
+    .dependencyCount = 0,
+    .pDependencies = NULL,
   };
   if(vkCreateRenderPass(this->m_p_gpu_manager->get_logical_device(),
 			&render_pass_create_info, NULL,
@@ -223,8 +203,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .depthClampEnable = VK_FALSE,
     .rasterizerDiscardEnable = VK_FALSE,
     .polygonMode = VK_POLYGON_MODE_FILL,
-    //.cullMode = VK_CULL_MODE_BACK_BIT,
-    .cullMode = VK_CULL_MODE_NONE,
+    .cullMode = VK_CULL_MODE_BACK_BIT,
     .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
     .depthBiasEnable = VK_FALSE,
     .depthBiasConstantFactor = 0.0f,
@@ -273,7 +252,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
       .binding = 0,
       .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
       .descriptorCount = 1,
-      .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+      .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
       .pImmutableSamplers = NULL
     }
   };
@@ -403,6 +382,11 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   
   vkUpdateDescriptorSets(p_gpu_manager->get_logical_device(), 1, &write_desc_set, 0,
 			 NULL);
+
+  Metaball_Data tmp = {.position=glm::vec2(0.4, 0.4), .radius=0.2,
+		       .color=glm::vec3(0,0,0)};
+  
+  this->m_point_buffer.flush(&tmp, sizeof(tmp));
   
   VkCommandBufferBeginInfo command_buffer_begin_info = {
     VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,

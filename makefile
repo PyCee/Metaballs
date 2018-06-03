@@ -1,5 +1,4 @@
 
-#SOURCES=main.cpp metaball.cpp vulkan_instance.cpp
 SOURCES=$(shell find src -type f -name '*.cpp' )
 
 SRC_DIR=src
