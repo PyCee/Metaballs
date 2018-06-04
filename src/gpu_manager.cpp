@@ -15,9 +15,10 @@ GPU_Manager::GPU_Manager(Vulkan_Instance &instance){
     std::cout << "ERROR::Failed enumerating physical devices" << std::endl;
   } else {
     std::cout << "Enumerated physical devices: " << gpu_count << std::endl;
-    VkPhysicalDeviceProperties device_properties;
-    vkGetPhysicalDeviceProperties(this->m_physical_devices[0], &device_properties);
-    std::cout << "Using physical device: " << device_properties.deviceName << std::endl;
+    vkGetPhysicalDeviceProperties(this->m_physical_devices[0],
+				  &this->m_device_properties);
+    std::cout << "Using physical device: " << this->m_device_properties.deviceName <<
+      std::endl;
   }
   
   vkGetPhysicalDeviceMemoryProperties(this->get_physical_device(),
@@ -167,4 +168,11 @@ unsigned int GPU_Manager::get_memory_type_index(VkMemoryRequirements mem_req,
   }
   std::cout << "failed to find viable memory type" << std::endl;
   return (unsigned int)-1;
+}
+long GPU_Manager::get_alignment(long size){
+  long min_alignment = this->m_device_properties.limits.minUniformBufferOffsetAlignment;
+  if(min_alignment){
+    return (size + min_alignment - 1) & ~(min_alignment - 1);
+  }
+  return size;
 }

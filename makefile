@@ -9,7 +9,8 @@ VULKAN_SDK_PATH = /home/kims/VulkanSDK/VulkanSDK/1.1.70.1/x86_64
 VULKAN_SDK_INCLUDE_PATH = $(VULKAN_SDK_PATH)/include
 
 CC=g++
-CFLAGS=-g -Wall \
+CFLAGS=-g -std=c++17 \
+	-Wall \
 	-Wfloat-equal \
 	-Wundef \
 	-Wshadow \

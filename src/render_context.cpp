@@ -12,7 +12,8 @@ Render_Context::Render_Context(Window &window, Vulkan_Instance *vulkan_instance,
 		  this->m_swapchain.get_surface_format().format,
 		  VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
 		  VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-		  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+		  VK_IMAGE_USAGE_SAMPLED_BIT,
 		  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 		  VK_IMAGE_ASPECT_COLOR_BIT),
   p_gpu_manager(gpu_manager),
