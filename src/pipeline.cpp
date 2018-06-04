@@ -40,7 +40,7 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
   m_plane_indices(p_gpu_manager, sizeof(plane_indices),
 		  VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT),
-  m_clear_value({.color={{0.0f, 0.0f, 0.0f, 1.0f}}}){
+  m_clear_value({.color={{0.0f, 0.0f, 0.0f, 0.0f}}}){
   
   // Renderpass Creation
   VkAttachmentDescription attachment_descriptions[] = {
@@ -390,13 +390,13 @@ Pipeline::Pipeline(GPU_Manager *p_gpu_manager, Render_Context &render_context):
     .flags = 0,
     .magFilter = VK_FILTER_LINEAR,
     .minFilter = VK_FILTER_LINEAR,
-    .mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+    .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
     .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
     .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
     .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-    .mipLodBias = 0,
-    .anisotropyEnable = VK_FALSE,
-    .maxAnisotropy = 0,
+    .mipLodBias = 0.0f,
+    .anisotropyEnable = VK_TRUE,
+    .maxAnisotropy = 16,
     .compareEnable = VK_FALSE,
     .compareOp = VK_COMPARE_OP_ALWAYS,
     .minLod = 0.0f,

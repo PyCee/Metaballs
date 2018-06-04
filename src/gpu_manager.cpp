@@ -62,6 +62,9 @@ GPU_Manager::GPU_Manager(Vulkan_Instance &instance){
     "VK_LAYER_LUNARG_standard_validation"
 #endif /* MTB_DEBUG */
   };
+  VkPhysicalDeviceFeatures requested_features = {};
+  requested_features.samplerAnisotropy = VK_TRUE;
+  
   VkDeviceCreateInfo device_create_info = {
     .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
     .pNext = NULL,
@@ -72,7 +75,7 @@ GPU_Manager::GPU_Manager(Vulkan_Instance &instance){
     .ppEnabledLayerNames = layers,
     .enabledExtensionCount = sizeof(extensions) / sizeof(*extensions),
     .ppEnabledExtensionNames = extensions,
-    .pEnabledFeatures = NULL
+    .pEnabledFeatures = &requested_features
   };
   this->m_logical_device = VK_NULL_HANDLE;
   if(vkCreateDevice(this->m_physical_devices[0], &device_create_info, NULL,

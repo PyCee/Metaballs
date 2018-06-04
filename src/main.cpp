@@ -39,8 +39,8 @@ int main(){
 	.position=glm::vec2(0.7, -0.4)
 	});
   metaballs[3].set_data((Metaball_Data){
-      .color_and_radius=glm::vec4(1.0f,0.0f,1.0f, 0.4),
-	.position=glm::vec2(-0.55, 0.0)
+      .color_and_radius=glm::vec4(0.6f,0.5f,0.1f, 0.4),
+	.position=glm::vec2(-0.5, 0.0)
 	});
   metaballs[4].set_data((Metaball_Data){
       .color_and_radius=glm::vec4(1.0f,1.0f,0.0f, 0.1),
@@ -53,7 +53,7 @@ int main(){
   data.push_back(metaballs[2]);
   data.push_back(metaballs[3]);
   data.push_back(metaballs[4]);
-
+  
   pipe.build_command_buffer(data);
   
   std::cout << "Pre loop" << std::endl;
